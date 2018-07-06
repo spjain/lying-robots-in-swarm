@@ -1,0 +1,227 @@
+include "include/string.bzz"
+include "include/vec2.bzz"
+
+template = {}
+n_temp = 3
+n_lying = 11
+correct_temp = 2
+buffer = 0.1
+template[0] = "1100001111000011"
+template[1] = "1010010110100101"
+template[2] = "1110000110110101"
+
+
+#global var
+THRESH = 0.8
+PROB_NOISE = 0.2
+shiftX = 6.0 #global position shifting
+shiftY = 6.0 #global position shifting
+belief = {}
+comm_step = 0
+comm_reset = 5
+i = 0
+while(i < n_temp){
+	belief[i] = 1.0/n_temp	 #belief of the robot for template
+	if (id < n_lying) {
+	belief[i] = 1.0/(n_temp - 1)
+	belief[correct_temp] = 0
+	}
+	i = i + 1
+}
+
+function obstacle_avoidance() {
+  # Initialise accumulator vector
+	accum = {.x = 0, .y = 0}
+	# Get a vector sum of values from all proximity sensors
+	i = 0
+	while(i<8) {
+		reading = math.vec2.newp(proximity[i].value, proximity[i].angle)
+		accum = math.vec2.add(accum, reading)
+		i = i+1
+	}
+	#If value is less than a threshold, go straight else turn away from obstacle
+	if (math.vec2.length(accum) < THRESH) {
+		set_wheels(10.0,10.0)
+	}
+	else {
+		if (math.vec2.angle(accum) > 0.0) {
+			set_wheels(10.0,0.0)
+		}
+		else {
+			set_wheels(0.0,10.0)
+		}
+	}
+
+}
+
+
+function checkTemplate(reading, final_pos_, pattern){
+	if (string.charat(template[pattern], final_pos_) == string.tostring(math.floor(reading)))
+		return 1 - PROB_NOISE;
+	else
+		return PROB_NOISE;
+}
+
+
+function normalise(){
+	length = 0
+	i = 0
+	while (i < n_temp){
+		length = length + belief[i]
+		i = i + 1
+	}
+
+	i = 0
+	if (length == 0){
+		while (i< n_temp){
+			belief[i] = 1.0/n_temp
+			i = i+1
+		}
+	}
+	else {
+		while (i< n_temp){
+			belief[i] = belief[i]/length
+			i = i+1
+		}
+	}
+}
+
+function inBuffer(xPos, yPos){
+	x = (xPos+shiftX)%4 
+	y = (-yPos+shiftY)%4
+	if (math.abs(x - math.round(x)) <= buffer or math.abs(y - math.round(y)) <= buffer)
+		return 1;
+	return 0;
+}
+
+function update_belief(position, observation){
+	key1 = 0
+	while (key1 < n_temp){
+		if (inBuffer(pose.position.x, pose.position.y) == 0)
+			belief[key1] = belief[key1]*checkTemplate(observation,position,key1)
+		key1 = key1 + 1
+	}
+	normalise()
+	neigh_belief = {} #new bel
+	weights = {}
+	i=0
+	while (i<n_temp){
+		neigh_belief[i] = 0
+		i=i+1
+	}
+	magnitudes = {}
+	if (size(messages) > n_lying) {
+	foreach(messages,	function(key, value) {
+				key1 = 0
+				weights[key] = 0
+				magnitudes[key] = 0
+				while (key1 < n_temp){
+					weights[key] = weights[key] + belief[key1]*value[key1]
+					magnitudes[key] = magnitudes[key] + value[key1]*value[key1]
+					key1 = key1 + 1
+				}
+		})
+	magnitude_self = 0
+	i=0
+	while(i<n_temp){
+		magnitude_self = magnitude_self + belief[i]*belief[i]
+		i = i+1
+	}
+	cosines = {}
+
+	foreach(weights, function(key, value){
+		cosines[key] = value/(math.sqrt(magnitudes[key])*math.sqrt(magnitude_self))
+	})
+
+	i=0
+	while (i < n_lying+1){
+		min_val = 2
+		foreach(cosines, function(key,value){
+			if (value < min_val){
+				min_val = value
+				min_index = key
+			}
+		})
+		cosines[min_index] = nil
+		messages[min_index] = nil
+		i = i+1
+	}
+		foreach(messages,
+		function(key, value) {
+				key1 = 0
+				while (key1 < n_temp){
+					belief[key1] = belief[key1]*value[key1]
+					key1 = key1 + 1
+				}
+				normalise()
+		})
+}
+
+
+}
+
+function project_belief(){
+	max_id = 0
+	i = 0
+	while(i < n_temp){
+		if(belief[i] > belief[max_id]){
+			max_id = i
+		}
+    i = i +1
+	}
+	if(max_id == 0){
+		set_leds(255,0,0)
+	}
+	if(max_id == 1){
+		set_leds(0,255,0)
+	}
+	if(max_id == 2){
+		set_leds(0,0,255)
+	}
+}
+
+function main() {
+	obstacle_avoidance() #obstacle avoidance
+	neighbors.broadcast("belief_m",belief)
+	reading = ground[0].value
+	posX = math.floor(pose.position.x+shiftX)%4   #x -tile
+	posY = math.floor(-pose.position.y+shiftY)%4  #y -tile
+	final_pos = 4*posX + posY #int (0-16)
+	if (id >= n_lying){
+		if (comm_step <= comm_reset){
+			messages = {}
+			comm_step = comm_step + 1
+		}
+		else comm_step = 0
+		update_belief(final_pos , reading)
+	}
+	# log(id,",",belief[0],",",belief[1],",",belief[2])
+	# log(id,",",inBuffer(pose.position.x, pose.position.y))
+
+}
+
+
+# Executed at init time
+function init() {
+messages = {}
+neighbors.listen("belief_m",
+	function(value_id,value_1,robot_id) {
+			messages[robot_id] = value_1
+		})
+}
+
+# Executed every time step
+function step(){
+
+
+main()
+project_belief()
+messages = {}
+
+}
+
+function reset() {
+}
+# Execute at exit
+function destroy() {
+}

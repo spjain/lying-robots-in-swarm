@@ -1,0 +1,6 @@
+set(ENV{BUZZ_INCLUDE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
+buzz_make(Algo1_basic_pattern_recognition.bzz)
+buzz_make(Algo2_average_belief.bzz)
+buzz_make(Algo2_average_belief_limited_comm.bzz)
+buzz_make(Algo3_SSR.bzz)
+buzz_make(Algo3_SSR_limited_comm.bzz)
