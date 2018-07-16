@@ -33,7 +33,7 @@
         <kheperaiv_ground   implementation="rot_z_only" />
         <positioning implementation="default" />
       </sensors>
-      <params>
+      <params bytecode_file="build/buzz/belief.bo" debug_file="build/buzz/belief.bdb">
         <wheel_turning hard_turn_angle_threshold="90"
                        soft_turn_angle_threshold="70"
                        no_turn_angle_threshold="10"
@@ -63,7 +63,9 @@
     <robots num_robots="10"
             num_liars="2"
             comm_range="1.0"
-            density="2.0" />
+            density="2.0"
+            good_fun="basic"
+            bad_fun="constant" />
   </loop_functions>
 
   <!-- *********************** -->

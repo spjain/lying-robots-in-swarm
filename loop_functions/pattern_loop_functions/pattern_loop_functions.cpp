@@ -1,6 +1,7 @@
 #include "pattern_loop_functions.h"
 #include <argos3/core/simulator/simulator.h>
 #include <argos3/core/utility/configuration/argos_configuration.h>
+#include <argos3/plugins/simulator/entities/box_entity.h>
 #include <cmath>
 #include <iostream>
 
@@ -9,6 +10,8 @@
 
 static const std::string THECONTROLLER = "bc";
 static const size_t MAX_PLACE_TRIALS = 100;
+static const Real WALL_THICKNESS   = 0.1;
+static const Real WALL_HEIGHT      = 0.5;
 
 /****************************************/
 /****************************************/
@@ -117,6 +120,12 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
       /* Calculate side of the region in which the robots are scattered */
       m_fArenaSide = Sqrt((fCommArea * un_robots) / f_density);
       CRange<Real> cAreaRange(0.0, m_fArenaSide);
+      /* Place walls */
+      Real fArenaSide2 = m_fArenaSide / 2.0;
+      AddEntity(*new CBoxEntity("wall_south", CVector3( fArenaSide2,            0, 0), CQuaternion(), false, CVector3(m_fArenaSide, WALL_THICKNESS, WALL_HEIGHT)));
+      AddEntity(*new CBoxEntity("wall_north", CVector3( fArenaSide2, m_fArenaSide, 0), CQuaternion(), false, CVector3(m_fArenaSide, WALL_THICKNESS, WALL_HEIGHT)));
+      AddEntity(*new CBoxEntity("wall_west",  CVector3(           0,  fArenaSide2, 0), CQuaternion(), false, CVector3(WALL_THICKNESS, m_fArenaSide, WALL_HEIGHT)));
+      AddEntity(*new CBoxEntity("wall_east",  CVector3(m_fArenaSide,  fArenaSide2, 0), CQuaternion(), false, CVector3(WALL_THICKNESS, m_fArenaSide, WALL_HEIGHT)));
       /* Place robots */
       UInt32 unTrials;
       CKheperaIVEntity* pcKhIV;
