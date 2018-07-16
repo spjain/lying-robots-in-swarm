@@ -1,4 +1,3 @@
-#link_directories(${CMAKE_BINARY_DIR}/controllers/footbot_foraging)
 set(pattern_loop_functions_SOURCES pattern_loop_functions.cpp)
 
 #if(ARGOS_COMPILE_QTOPENGL)
@@ -9,12 +8,12 @@ set(pattern_loop_functions_SOURCES pattern_loop_functions.cpp)
 
 add_library(pattern_loop_functions MODULE ${pattern_loop_functions_SOURCES})
 target_link_libraries(pattern_loop_functions
+  ${BUZZ_LIBRARY}
   argos3core_simulator
   argos3plugin_simulator_entities
   argos3plugin_simulator_kheperaiv
   argos3plugin_simulator_buzz
   argos3plugin_simulator_dynamics2d
-  argos3plugin_simulator_footbot
   argos3plugin_simulator_genericrobot
   argos3plugin_simulator_media)
 

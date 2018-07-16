@@ -1,5 +1,5 @@
-#ifndef FORAGING_LOOP_FUNCTIONS_H
-#define FORAGING_LOOP_FUNCTIONS_H
+#ifndef PATTERN_LOOP_FUNCTIONS_H
+#define PATTERN_LOOP_FUNCTIONS_H
 
 #include <buzz/argos/buzz_controller.h>
 #include <argos3/core/simulator/loop_functions.h>
@@ -10,40 +10,56 @@
 
 using namespace argos;
 
-class CForagingLoopFunctions : public CLoopFunctions {
+class CPatternLoopFunctions : public CLoopFunctions {
 
 public:
 
-   CForagingLoopFunctions();
-   virtual ~CForagingLoopFunctions() {}
-
+   virtual ~CPatternLoopFunctions() {}
    virtual void Init(TConfigurationNode& t_tree);
-   virtual void Reset();
    virtual void Destroy();
-   virtual CColor GetFloorColor(const CVector2& c_position_on_plane);
-   virtual void PreStep();
+   virtual CColor GetFloorColor(const CVector2& c_pos);
    virtual void PostStep();
-   bool IsExperimentFinished();
 
 private:
 
-   Real m_fFoodSquareRadius;
-   CRange<Real> m_cForagingArenaSideX, m_cForagingArenaSideY;
-   std::vector<CVector2> m_cFoodPos;
-   CFloorEntity* m_pcFloor;
-   CRandom::CRNG* m_pcRNG;
+   /*
+    * Places the robots uniformly.
+    * @param un_robots    The total number of robots
+    * @param un_liars     The number of liars
+    * @param f_commrange  The communication range of the robots
+    * @param f_density    The target density of the robots
+    * @param str_good_fun Buzz function executed by good robots
+    * @param str_bad_fun  Buzz function executed by bad robots
+    */
+   void PlaceRobots(UInt32 un_robots,
+                    UInt32 un_liars,
+                    Real f_commrange,
+                    Real f_density,
+                    const std::string& str_good_fun,
+                    const std::string& str_bad_fun);
 
+private:
+
+   /* List of origin anchors associated to the non-lying robots */
+   std::vector<SAnchor*> m_vecGoodAnchors;
+   /* List of Buzz VMs associated to the non-lying robots */
+   std::vector<buzzvm_t> m_vecGoodVMs;
+
+   /* Arena side */
+   Real m_fArenaSide;
+   /* Number of individual black/white cells on a side of the arena */
+   UInt32 m_unNumCellsOnSide;
+
+   /* Pattern binary encoding */
+   UInt64 m_unPattern;
+
+   /* Output file name */
    std::string m_strOutput;
+   /* Output file stream */
    std::ofstream m_cOutput;
-   std::vector<CKheperaIVEntity*> m_pcKheperas;
-   std::vector<CBuzzController*> m_pcControllers;
 
-   UInt32 m_unCollectedFood;
-   SInt64 m_nEnergy;
-   UInt32 m_unEnergyPerFoodItem;
-   UInt32 m_unEnergyPerWalkingRobot;
-   std::ofstream ResultFile;
-   Real belief(buzzvm_t t_buzz_vm, int key);
+   /* Random number generator */
+   CRandom::CRNG* m_pcRNG;
 };
 
 #endif
