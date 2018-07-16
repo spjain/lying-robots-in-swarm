@@ -1,8 +1,84 @@
+########################################
+#
+# Global variables set in the loop functions
+#
+# num_liars = the number of liars
+# good_fun  = the function that a non-lying robot must execute
+# bad_fun   = the function that a lying robot must execute
+# pattern   = the correct pattern
+
+########################################
+#
+# Overall logic
+#
+# 1. The robots execute obstacle avoidance
+# 2. The robots are divided in two swarms: good and bad
+#    a. The non-lying robots exchange information according to good_fun
+#    b. The lying robots exchange information according to bad_fun
+
+########################################
+#
+# Swarm id
+SWARM_BAD  = 1
+SWARM_GOOD = 2
+
+########################################
+#
+# Executed at init time
 function init() {
+  # Create the swarms of good and bad robots
+  bad = swarm.create(SWARM_BAD)
+  bad.select(id < num_liars)
+  good = bad.others(SWARM_GOOD)
 }
 
+########################################
+#
+# Executed at every step
 function step() {
+  obstacle_avoidance()
+  bad.exec(bad_fun)
+  good.exec(good_fun)
 }
 
+########################################
+#
+# Executed at the end of the experiment
 function destroy() {
+}
+
+########################################
+#
+# Obstacle avoidance logic
+function obstacle_avoidance() {
+}
+
+########################################
+#
+# Bad functions
+#
+# Constant belief
+function bad_fun_constant() {
+  
+}
+# Periodic belief
+function bad_fun_periodic() {
+  
+}
+
+########################################
+#
+# Good functions
+#
+# Basic method
+function good_fun_basic() {
+  
+}
+# Take the average
+function good_fun_average() {
+  
+}
+# Filter extreme beliefs
+function good_fun_filter() {
+  
 }

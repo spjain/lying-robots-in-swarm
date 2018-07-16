@@ -64,8 +64,8 @@
             num_liars="2"
             comm_range="1.0"
             density="2.0"
-            good_fun="basic"
-            bad_fun="constant" />
+            good_fun="good_fun_basic"
+            bad_fun="bad_fun_constant" />
   </loop_functions>
 
   <!-- *********************** -->

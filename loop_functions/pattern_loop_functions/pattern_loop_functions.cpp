@@ -173,11 +173,21 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
          buzzvm_pushi(tBuzzVM, un_liars);
          buzzvm_gstore(tBuzzVM);
          /* Set scripts */
+         /* Good robots function */
          buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "good_fun", 1));
-         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, str_good_fun.c_str(), 1));
+         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, str_good_fun.c_str(), 0));
+         buzzvm_gload(tBuzzVM);
+         if(buzzvm_stack_at(tBuzzVM, 1)->o.type != BUZZTYPE_CLOSURE) {
+            THROW_ARGOSEXCEPTION("Buzz script does not contain function '" << str_good_fun << "'");
+         }
          buzzvm_gstore(tBuzzVM);
+         /* Bad robots function */
          buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "bad_fun", 1));
-         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, str_bad_fun.c_str(), 1));
+         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, str_bad_fun.c_str(), 0));
+         buzzvm_gload(tBuzzVM);
+         if(buzzvm_stack_at(tBuzzVM, 1)->o.type != BUZZTYPE_CLOSURE) {
+            THROW_ARGOSEXCEPTION("Buzz script does not contain function '" << str_bad_fun << "'");
+         }
          buzzvm_gstore(tBuzzVM);
       }
    }
