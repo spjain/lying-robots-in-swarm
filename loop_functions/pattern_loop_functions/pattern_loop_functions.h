@@ -24,19 +24,21 @@ private:
 
    /*
     * Places the robots uniformly.
-    * @param un_robots    The total number of robots
-    * @param un_liars     The number of liars
-    * @param f_commrange  The communication range of the robots
-    * @param f_density    The target density of the robots
-    * @param str_good_fun Buzz function executed by good robots
-    * @param str_bad_fun  Buzz function executed by bad robots
+    * @param un_robots      The total number of robots
+    * @param un_liars       The number of liars
+    * @param f_commrange    The communication range of the robots
+    * @param f_density      The target density of the robots
+    * @param str_good_fun   Buzz function executed by good robots
+    * @param str_bad_fun    Buzz function executed by bad robots
+    * @param un_comm_period Number of steps between two messages sent by a robot
     */
    void PlaceRobots(UInt32 un_robots,
                     UInt32 un_liars,
                     Real f_commrange,
                     Real f_density,
                     const std::string& str_good_fun,
-                    const std::string& str_bad_fun);
+                    const std::string& str_bad_fun,
+                    UInt32 un_comm_period);
 
 private:
 

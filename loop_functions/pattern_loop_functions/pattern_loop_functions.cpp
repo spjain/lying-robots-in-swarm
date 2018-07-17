@@ -39,21 +39,23 @@ void CPatternLoopFunctions::Init(TConfigurationNode& t_tree) {
       /* Parse robot-related parameters */
       TConfigurationNode& tRobots = GetNode(t_tree, "robots");
       UInt32 unNumRobots;
-      GetNodeAttribute(tRobots, "num_robots", unNumRobots);
+      GetNodeAttribute(tRobots, "num_robots",  unNumRobots);
       UInt32 unNumLiars;
-      GetNodeAttribute(tRobots, "num_liars",  unNumLiars);
+      GetNodeAttribute(tRobots, "num_liars",   unNumLiars);
       Real fCommRange;
-      GetNodeAttribute(tRobots, "comm_range", fCommRange);
+      GetNodeAttribute(tRobots, "comm_range",  fCommRange);
       Real fDensity;
-      GetNodeAttribute(tRobots, "density",    fDensity);
+      GetNodeAttribute(tRobots, "density",     fDensity);
       std::string strGoodFun;
-      GetNodeAttribute(tRobots, "good_fun",   strGoodFun);
+      GetNodeAttribute(tRobots, "good_fun",    strGoodFun);
       std::string strBadFun;
-      GetNodeAttribute(tRobots, "bad_fun",    strBadFun);
+      GetNodeAttribute(tRobots, "bad_fun",     strBadFun);
+      UInt32 unCommPeriod;
+      GetNodeAttribute(tRobots, "comm_period", unCommPeriod);
       /* Place robots */
       PlaceRobots(unNumRobots, unNumLiars,
                   fCommRange, fDensity,
-                  strGoodFun, strBadFun);
+                  strGoodFun, strBadFun, unCommPeriod);
    }
    catch(CARGoSException& ex) {
       THROW_ARGOSEXCEPTION_NESTED("Error parsing loop functions!", ex);
@@ -113,7 +115,8 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
                                         Real f_commrange,
                                         Real f_density,
                                         const std::string& str_good_fun,
-                                        const std::string& str_bad_fun) {
+                                        const std::string& str_bad_fun,
+                                        UInt32 un_comm_period) {
    try {
       /* Calculate area covered by the communication range */
       Real fCommArea = CRadians::PI.GetValue() * Square(f_commrange);
@@ -168,6 +171,10 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
             m_vecGoodAnchors.push_back(&pcKhIV->GetEmbodiedEntity().GetOriginAnchor());
             m_vecGoodVMs.push_back(tBuzzVM);
          }
+         /* Set communication period */
+         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "comm_period", 1));
+         buzzvm_pushi(tBuzzVM, un_comm_period);
+         buzzvm_gstore(tBuzzVM);
          /* Set number of liars */
          buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "num_liars", 1));
          buzzvm_pushi(tBuzzVM, un_liars);

@@ -65,7 +65,8 @@
             comm_range="1.0"
             density="2.0"
             good_fun="good_fun_basic"
-            bad_fun="bad_fun_constant" />
+            bad_fun="bad_fun_constant"
+            comm_period="10" />
   </loop_functions>
 
   <!-- *********************** -->
@@ -97,7 +98,7 @@
   <visualization>
     <qt-opengl>
       <camera>
-        <placement idx="0" position="3.46158,2.39118,5.87397" look_at="3.46324,2.47107,4.87717" up="0.0207415,0.996586,0.0799147" lens_focal_length="20" />
+        <placement idx="0" position="2.39692,1.94281,3.04959" look_at="2.39702,1.95281,2.04964" up="0.00918234,0.999908,0.00999983" lens_focal_length="20" />
       </camera>
       <user_functions label="buzz_qt" />
     </qt-opengl>

@@ -4,6 +4,7 @@ include "include/vec2.bzz"
 #
 # Global variables set in the loop functions
 #
+# comm_period  = the time between two message updates
 # num_liars    = the number of liars
 # good_fun     = the function that a non-lying robot must execute
 # bad_fun      = the function that a lying robot must execute
