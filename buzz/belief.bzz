@@ -4,10 +4,11 @@ include "include/vec2.bzz"
 #
 # Global variables set in the loop functions
 #
-# num_liars = the number of liars
-# good_fun  = the function that a non-lying robot must execute
-# bad_fun   = the function that a lying robot must execute
-# pattern   = the correct pattern
+# num_liars    = the number of liars
+# good_fun     = the function that a non-lying robot must execute
+# bad_fun      = the function that a lying robot must execute
+# num_patterns = the total number of patterns
+# pattern      = the correct pattern (an integer)
 
 ########################################
 #
@@ -20,7 +21,7 @@ include "include/vec2.bzz"
 
 ########################################
 #
-# Swarm id
+# Swarm ids
 SWARM_BAD  = 1
 SWARM_GOOD = 2
 
@@ -54,15 +55,15 @@ function destroy() {
 # Obstacle avoidance logic
 function obstacle_avoidance() {
   # Consider only frontal proximity sensors
-  frontsensors = filter(proximity, function(k,v) {
+  var frontsensors = filter(proximity, function(k,v) {
       return v.angle < math.pi / 2.0 or v.angle > 3.0 * math.pi / 2.0
     })
   # Transform table elements in cartesian coordinates
-  cartesian = map(frontsensors, function(k,v) {
+  var cartesian = map(frontsensors, function(k,v) {
       return math.vec2.newp(v.value, v.angle)
     })
   # Sum vectors together
-  accum = reduce(cartesian, function(k,v,a) {
+  var accum = reduce(cartesian, function(k,v,a) {
       return math.vec2.add(a,v)
     }, math.vec2.new(0,0))
   # Rescale accumulator
@@ -72,6 +73,8 @@ function obstacle_avoidance() {
   var length = math.vec2.length(accum)
   # If the angle of the vector is small enough and the closest obstacle
   # is far enough, continue going straight, otherwise curve a little
+  # When the proximity sensors see nothing, accum is zero, so the robot
+  # just goes straight
   if(math.abs(angle) < math.pi/10.0 and length < 0.1) {
     set_wheels(10.0, 10.0)
   }
@@ -91,6 +94,10 @@ function obstacle_avoidance() {
 #
 # Constant belief
 function bad_fun_constant() {
+  
+}
+# Uniformly random belief
+function bad_fun_uniform() {
   
 }
 # Periodic belief

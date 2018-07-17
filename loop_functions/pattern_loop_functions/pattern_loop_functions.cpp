@@ -172,6 +172,14 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
          buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "num_liars", 1));
          buzzvm_pushi(tBuzzVM, un_liars);
          buzzvm_gstore(tBuzzVM);
+         /* Set number of patterns */
+         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "num_patterns", 1));
+         buzzvm_pushi(tBuzzVM, 1 << (m_unNumCellsOnSide * m_unNumCellsOnSide));
+         buzzvm_gstore(tBuzzVM);
+         /* Set correct pattern */
+         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "pattern", 1));
+         buzzvm_pushi(tBuzzVM, m_unPattern);
+         buzzvm_gstore(tBuzzVM);
          /* Set scripts */
          /* Good robots function */
          buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "good_fun", 1));
