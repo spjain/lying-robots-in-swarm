@@ -1,3 +1,5 @@
+include "include/vec2.bzz"
+
 ########################################
 #
 # Global variables set in the loop functions
@@ -51,6 +53,36 @@ function destroy() {
 #
 # Obstacle avoidance logic
 function obstacle_avoidance() {
+  # Consider only frontal proximity sensors
+  frontsensors = filter(proximity, function(k,v) {
+      return v.angle < math.pi / 2.0 or v.angle > 3.0 * math.pi / 2.0
+    })
+  # Transform table elements in cartesian coordinates
+  cartesian = map(frontsensors, function(k,v) {
+      return math.vec2.newp(v.value, v.angle)
+    })
+  # Sum vectors together
+  accum = reduce(cartesian, function(k,v,a) {
+      return math.vec2.add(a,v)
+    }, math.vec2.new(0,0))
+  # Rescale accumulator
+  math.vec2.scale(accum, 1.0 / size(cartesian))
+  # Get angle and length of accumulator
+  var angle = math.vec2.angle(accum)
+  var length = math.vec2.length(accum)
+  # If the angle of the vector is small enough and the closest obstacle
+  # is far enough, continue going straight, otherwise curve a little
+  if(math.abs(angle) < math.pi/10.0 and length < 0.1) {
+    set_wheels(10.0, 10.0)
+  }
+  else {
+    if(angle > 0.0) {
+      set_wheels(10.0, 0.0)
+    }
+    else {
+      set_wheels(0.0, 10.0)
+    }
+  }
 }
 
 ########################################
