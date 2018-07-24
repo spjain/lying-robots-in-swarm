@@ -12,7 +12,7 @@
   <!-- * General configuration * -->
   <!-- ************************* -->
   <framework>
-    <system threads="0" />
+    <system threads="2" />
     <experiment length="0"
                 ticks_per_second="10"
                 random_seed="12345" />
@@ -69,12 +69,12 @@
     <patterns cells_on_side="2"
               pattern="6" />
     <robots num_robots="10"
-            num_liars="5"
+            num_liars="1"
             comm_range="1.0"
-            density="10.0"
+            density="2.0"
             good_fun="basic"
             bad_fun="constant"
-            noise_prob="0"
+            noise_prob="0.1"
             comm_period="10" />
   </loop_functions>
 

@@ -28,7 +28,10 @@ function belief_update_sensing(bel) {
     # Readings are not the same, skip calculations
     return bel
   }
+  # Calculate actual reading
   var act_read = (ground[0].value > 0.0)
+  # Apply noise
+  if(math.rng.uniform(1.0) < noise_prob) act_read = !act_read
   # Calculate the arena position of the center of mass of the ground sensors
   var gndpos = reduce(ground, function(k,v,sum) { return math.vec2.add(sum, v.offset) }, math.vec2.new(0.0, 0.0))
   gndpos = math.vec2.scale(gndpos, 0.25)
