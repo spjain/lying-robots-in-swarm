@@ -42,10 +42,10 @@ function belief_update_sensing(bel) {
       var exp_read = ((k & (1 << idx)) > 0)
       # Calculate new prob
       if(exp_read == act_read) {
-        return v * (1-noise_prob)
+        return v * (1-noise_prob) + EPSILON
       }
       else {
-        return v * noise_prob
+        return v * noise_prob + EPSILON
       }
     })
 }

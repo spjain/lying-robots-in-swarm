@@ -71,7 +71,7 @@
     <robots num_robots="10"
             num_liars="5"
             comm_range="1.0"
-            density="2.0"
+            density="10.0"
             good_fun="basic"
             bad_fun="constant"
             noise_prob="0"

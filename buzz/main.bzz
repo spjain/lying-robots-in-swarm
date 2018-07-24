@@ -62,6 +62,8 @@ function init() {
 #
 # Executed at init time, called in loop functions PlaceRobots()
 function lf_init() {
+  # Used to prevent any belief to go to zero
+  EPSILON = 0.0001 / num_patterns
   # Create the swarms of good and bad robots
   bad = swarm.create(SWARM_BAD)
   bad.select(id < num_liars)
