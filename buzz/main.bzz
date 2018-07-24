@@ -1,0 +1,111 @@
+# Vector 2 math
+include "include/vec2.bzz"
+# Belief management
+include "belief.bzz"
+# Obstacle avoidance
+include "motion.bzz"
+# Functions for lying robots
+include "bad_fun.bzz"
+# Functions for good robots
+include "good_fun.bzz"
+
+########################################
+#
+# Global variables WRITTEN BY the loop functions
+#
+# noise_prob    = the probability of reading the wrong tile color
+# comm_period   = the time between two message updates
+# num_liars     = the number of liars
+# good_fun_init = the function that a non-lying robot must execute at init
+# good_fun_step = the function that a non-lying robot must execute every step
+# bad_fun_init  = the function that a lying robot must execute at init
+# bad_fun_step  = the function that a lying robot must execute every step
+# num_patterns  = the total number of patterns
+# pattern       = the correct pattern (an integer)
+# arena_side    = the length of the arena side
+# cells_on_side = how many cells on an arena side
+
+########################################
+#
+# Global variables READ BY the loop functions
+#
+# correct_pattern_prob = probability of the correct pattern
+# picked_pattern_prob  = probability of the pattern believed by this robot
+# picked_pattern       = index of the pattern believed by this robot
+# picked_pattern_num   = how many patterns have the same probability
+
+########################################
+#
+# Overall logic
+#
+# 1. The robots execute obstacle avoidance
+# 2. The robots read their ground sensors
+# 3. The robots are divided in two swarms: good and bad
+#    a. The non-lying robots exchange information according to good_fun
+#    b. The lying robots exchange information according to bad_fun
+
+########################################
+#
+# Swarm ids
+SWARM_BAD  = 1
+SWARM_GOOD = 2
+
+########################################
+#
+# Executed at init time, before loop function init
+function init() {
+  # Here none of the global variables have been initialized yet
+  # Not much to do
+}
+
+########################################
+#
+# Executed at init time, called in loop functions PlaceRobots()
+function lf_init() {
+  # Create the swarms of good and bad robots
+  bad = swarm.create(SWARM_BAD)
+  bad.select(id < num_liars)
+  good = bad.others(SWARM_GOOD)
+  # Call initialization function
+  bad.exec(bad_fun_init)
+  good.exec(good_fun_init)
+  # Initialize belief
+  belief = belief_new(1.0 / num_patterns)
+  # Initialize step counter
+  stepcount = 0
+}
+
+########################################
+#
+# Executed at every step
+function step() {
+  # Update step counter
+  stepcount = (stepcount + 1) % comm_period
+  # Perform motion
+  obstacle_avoidance()
+  # Execute logic
+  bad.exec(bad_fun_step)
+  good.exec(good_fun_step)
+}
+
+########################################
+#
+# Executed at the end of the experiment
+function destroy() {
+}
+
+########################################
+#
+# Support functions
+#
+# Transform robot position into cell index
+function pos_to_cell(x, y) {
+  var i = int(cells_on_side * x / arena_side)
+  var j = int(cells_on_side * y / arena_side)
+  return j * cells_on_side + i
+}
+# Returns true if it's time to listen to neighbors
+function should_listen() {
+  return stepcount % comm_period == 0
+}
+

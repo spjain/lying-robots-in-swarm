@@ -30,6 +30,7 @@ private:
     * @param f_density      The target density of the robots
     * @param str_good_fun   Buzz function executed by good robots
     * @param str_bad_fun    Buzz function executed by bad robots
+    * @param f_noise_prob   The probability of reading the wrong tile color
     * @param un_comm_period Number of steps between two messages sent by a robot
     */
    void PlaceRobots(UInt32 un_robots,
@@ -38,6 +39,7 @@ private:
                     Real f_density,
                     const std::string& str_good_fun,
                     const std::string& str_bad_fun,
+                    Real f_noise_prob,
                     UInt32 un_comm_period);
 
 private:

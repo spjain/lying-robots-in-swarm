@@ -30,8 +30,9 @@ void CPatternLoopFunctions::Init(TConfigurationNode& t_tree) {
                 << "Robot\t"
                 << "X\t"
                 << "Y\t"
-                << "Pattern\t"
-                << "Prob\n";
+                << "PickedPattern\t"
+                << "PickedPatternProb\t"
+                << "CorrectPatternProb\n";
       /* Parse pattern-related parameters */
       TConfigurationNode& tPatterns = GetNode(t_tree, "patterns");
       GetNodeAttribute(tPatterns, "cells_on_side", m_unNumCellsOnSide);
@@ -50,12 +51,15 @@ void CPatternLoopFunctions::Init(TConfigurationNode& t_tree) {
       GetNodeAttribute(tRobots, "good_fun",    strGoodFun);
       std::string strBadFun;
       GetNodeAttribute(tRobots, "bad_fun",     strBadFun);
+      Real fNoiseProb;
+      GetNodeAttribute(tRobots, "noise_prob",  fNoiseProb);
       UInt32 unCommPeriod;
       GetNodeAttribute(tRobots, "comm_period", unCommPeriod);
       /* Place robots */
       PlaceRobots(unNumRobots, unNumLiars,
                   fCommRange, fDensity,
-                  strGoodFun, strBadFun, unCommPeriod);
+                  strGoodFun, strBadFun,
+                  fNoiseProb, unCommPeriod);
    }
    catch(CARGoSException& ex) {
       THROW_ARGOSEXCEPTION_NESTED("Error parsing loop functions!", ex);
@@ -89,26 +93,81 @@ CColor CPatternLoopFunctions::GetFloorColor(const CVector2& c_pos) {
 /****************************************/
 /****************************************/
 
+buzzvm_state FetchInt(buzzvm_t t_vm,
+                      const std::string& str_sym,
+                      SInt32& n_value) {
+   buzzvm_pushs(t_vm, buzzvm_string_register(t_vm, str_sym.c_str(), 0));
+   buzzvm_gload(t_vm);
+   buzzvm_type_assert(t_vm, 1, BUZZTYPE_INT);
+   n_value = buzzvm_stack_at(t_vm, 1)->i.value;
+   return BUZZVM_STATE_READY;
+}
+
+buzzvm_state FetchFloat(buzzvm_t t_vm,
+                        const std::string& str_sym,
+                        Real& f_value) {
+   buzzvm_pushs(t_vm, buzzvm_string_register(t_vm, str_sym.c_str(), 0));
+   buzzvm_gload(t_vm);
+   buzzvm_type_assert(t_vm, 1, BUZZTYPE_FLOAT);
+   f_value = buzzvm_stack_at(t_vm, 1)->f.value;
+   return BUZZVM_STATE_READY;
+}
+
 void CPatternLoopFunctions::PostStep() {
-   UInt32 unPattern;
-   Real fPatternProb;
+   SInt32 nPickedPattern;
+   Real fPickedPatternProb;
+   Real fCorrectPatternProb;
    /* Go through non-lying robots */
    for(size_t i = 0; i < m_vecGoodVMs.size(); ++i) {
-      /* Get the highest probability pattern */
-      unPattern = 0; // TODO
-      fPatternProb = 0.5; // TODO
+      /* Get data from the VM */
+      FetchInt(m_vecGoodVMs[i], "picked_pattern", nPickedPattern);
+      FetchFloat(m_vecGoodVMs[i], "picked_pattern_prob", fPickedPatternProb);
+      FetchFloat(m_vecGoodVMs[i], "correct_pattern_prob", fCorrectPatternProb);
       /* Save data to disk */
       m_cOutput << GetSpace().GetSimulationClock()      << "\t"  // time step
                 << m_vecGoodVMs[i]->robot               << "\t"  // robot id
                 << m_vecGoodAnchors[i]->Position.GetX() << "\t"  // pos x
                 << m_vecGoodAnchors[i]->Position.GetY() << "\t"  // pos y
-                << unPattern                            << "\t"  // pattern code
-                << fPatternProb                         << "\n"; // probability
+                << nPickedPattern                       << "\t"  // picked pattern code
+                << fPickedPatternProb                   << "\t"  // picked pattern
+                << fCorrectPatternProb                  << "\n"; // correct pattern
    }
 }
 
 /****************************************/
 /****************************************/
+
+static void RegisterFunction(buzzvm_t t_vm,
+                             const std::string& str_sym,
+                             const std::string& str_fun) {
+   buzzvm_pushs(t_vm, buzzvm_string_register(t_vm, str_sym.c_str(), 1));
+   buzzvm_pushs(t_vm, buzzvm_string_register(t_vm, str_fun.c_str(), 0));
+   buzzvm_gload(t_vm);
+   if(buzzvm_stack_at(t_vm, 1)->o.type != BUZZTYPE_CLOSURE) {
+      THROW_ARGOSEXCEPTION("Buzz script does not contain function '" << str_fun << "'");
+   }
+   buzzvm_gstore(t_vm);
+}
+
+static void RegisterInt(buzzvm_t t_vm,
+                        const std::string& str_sym,
+                        SInt32 n_value) {
+   buzzvm_pushs(t_vm,
+                buzzvm_string_register(t_vm,
+                                       str_sym.c_str(), 1));
+   buzzvm_pushi(t_vm, n_value);
+   buzzvm_gstore(t_vm);
+}
+
+static void RegisterFloat(buzzvm_t t_vm,
+                          const std::string& str_sym,
+                          Real f_value) {
+   buzzvm_pushs(t_vm,
+                buzzvm_string_register(t_vm,
+                                       str_sym.c_str(), 1));
+   buzzvm_pushf(t_vm, f_value);
+   buzzvm_gstore(t_vm);
+}
 
 void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
                                         UInt32 un_liars,
@@ -116,6 +175,7 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
                                         Real f_density,
                                         const std::string& str_good_fun,
                                         const std::string& str_bad_fun,
+                                        Real f_noise_prob,
                                         UInt32 un_comm_period) {
    try {
       /* Calculate area covered by the communication range */
@@ -143,7 +203,11 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
          /* Create the robot in the origin and add it to ARGoS space */
          pcKhIV = new CKheperaIVEntity(
             cKhIVId.str(),
-            THECONTROLLER);
+            THECONTROLLER,
+            CVector3(),
+            CQuaternion(),
+            f_commrange,
+            500);
          AddEntity(*pcKhIV);
          /* Try to place it in the arena */
          unTrials = 0;
@@ -171,39 +235,27 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
             m_vecGoodAnchors.push_back(&pcKhIV->GetEmbodiedEntity().GetOriginAnchor());
             m_vecGoodVMs.push_back(tBuzzVM);
          }
+         /* Set noise probability */
+         RegisterFloat(tBuzzVM, "noise_prob", f_noise_prob);
          /* Set communication period */
-         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "comm_period", 1));
-         buzzvm_pushi(tBuzzVM, un_comm_period);
-         buzzvm_gstore(tBuzzVM);
+         RegisterInt(tBuzzVM, "comm_period", un_comm_period);
          /* Set number of liars */
-         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "num_liars", 1));
-         buzzvm_pushi(tBuzzVM, un_liars);
-         buzzvm_gstore(tBuzzVM);
+         RegisterInt(tBuzzVM, "num_liars", un_liars);
          /* Set number of patterns */
-         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "num_patterns", 1));
-         buzzvm_pushi(tBuzzVM, 1 << (m_unNumCellsOnSide * m_unNumCellsOnSide));
-         buzzvm_gstore(tBuzzVM);
+         RegisterInt(tBuzzVM, "num_patterns", 1 << (m_unNumCellsOnSide * m_unNumCellsOnSide));
          /* Set correct pattern */
-         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "pattern", 1));
-         buzzvm_pushi(tBuzzVM, m_unPattern);
-         buzzvm_gstore(tBuzzVM);
+         RegisterInt(tBuzzVM, "pattern", m_unPattern);
          /* Set scripts */
-         /* Good robots function */
-         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "good_fun", 1));
-         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, str_good_fun.c_str(), 0));
-         buzzvm_gload(tBuzzVM);
-         if(buzzvm_stack_at(tBuzzVM, 1)->o.type != BUZZTYPE_CLOSURE) {
-            THROW_ARGOSEXCEPTION("Buzz script does not contain function '" << str_good_fun << "'");
-         }
-         buzzvm_gstore(tBuzzVM);
-         /* Bad robots function */
-         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, "bad_fun", 1));
-         buzzvm_pushs(tBuzzVM, buzzvm_string_register(tBuzzVM, str_bad_fun.c_str(), 0));
-         buzzvm_gload(tBuzzVM);
-         if(buzzvm_stack_at(tBuzzVM, 1)->o.type != BUZZTYPE_CLOSURE) {
-            THROW_ARGOSEXCEPTION("Buzz script does not contain function '" << str_bad_fun << "'");
-         }
-         buzzvm_gstore(tBuzzVM);
+         /* Set arena_side */
+         RegisterFloat(tBuzzVM, "arena_side", m_fArenaSide);
+         /* Set cells_on_side */
+         RegisterInt(tBuzzVM, "cells_on_side", m_unNumCellsOnSide);
+         /* Good/bad robots functions */
+         RegisterFunction(tBuzzVM, "good_fun_init", "good_fun_" + str_good_fun + "_init");
+         RegisterFunction(tBuzzVM, "good_fun_step", "good_fun_" + str_good_fun + "_step");
+         RegisterFunction(tBuzzVM, "bad_fun_init", "bad_fun_" + str_bad_fun + "_init");
+         RegisterFunction(tBuzzVM, "bad_fun_step", "bad_fun_" + str_bad_fun + "_step");
+         buzzvm_function_call(tBuzzVM, "lf_init", 0);
       }
    }
    catch(CARGoSException& ex) {

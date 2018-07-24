@@ -1,0 +1,33 @@
+########################################
+#
+# Obstacle avoidance logic
+function obstacle_avoidance() {
+  # Transform table elements in cartesian coordinates
+  var cartesian = map(proximity, function(k,v) {
+      return math.vec2.newp(v.value, v.angle)
+    })
+  # Sum vectors together
+  var accum = reduce(cartesian, function(k,v,a) {
+      return math.vec2.add(a,v)
+    }, math.vec2.new(0,0))
+  # Rescale accumulator
+  math.vec2.scale(accum, 1.0 / size(cartesian))
+  # Get angle and length of accumulator
+  var angle = math.vec2.angle(accum)
+  var length = math.vec2.length(accum)
+  # If the angle of the vector is small enough and the closest obstacle
+  # is far enough, continue going straight, otherwise curve a little
+  # When the proximity sensors see nothing, accum is zero, so the robot
+  # just goes straight
+  if(math.abs(angle) < math.pi/10.0 and length < 0.1) {
+    set_wheels(10.0, 10.0)
+  }
+  else {
+    if(angle > 0.0) {
+      set_wheels(10.0, 0.0)
+    }
+    else {
+      set_wheels(0.0, 10.0)
+    }
+  }
+}

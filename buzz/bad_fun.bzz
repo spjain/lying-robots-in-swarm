@@ -1,0 +1,54 @@
+########################################
+#
+# Constant belief
+#
+# Init function
+function bad_fun_constant_init() {
+  log("bad_fun_constant_init")
+  debug.set_color(255,0,0)
+  # Pick a pattern at random, making sure it's the wrong one
+  pp = math.rng.uniform(num_patterns)
+  while(pp == pattern) {
+    pp = math.rng.uniform(num_patterns)
+  }
+  debug.print(pp)
+  # Make new belief with all zeroes and a 1 for the picked pattern
+  belief = belief_new(0.0)
+  belief[pp] = 1.0
+  # Broadcast belief (it stays constant throughout the run)
+  neighbors.broadcast("bb", belief)
+}
+#
+# Step function
+function bad_fun_constant_step() {
+}
+
+########################################
+#
+# Uniformly random belief
+#
+# Init function
+function bad_fun_uniform_init() {
+  log("bad_fun_uniform_init")
+  debug.set_color(255,0,0)
+}
+#
+# Step function
+function bad_fun_uniform_init() {
+  log("bad_fun_uniform_step")
+}
+
+########################################
+#
+# Periodic belief
+#
+# Init function
+function bad_fun_periodic_init() {
+  log("bad_fun_periodic_init")
+  debug.set_color(255,0,0)
+}
+#
+# Step function
+function bad_fun_periodic_step() {
+  log("bad_fun_periodic_step")
+}

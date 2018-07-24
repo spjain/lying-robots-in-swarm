@@ -33,7 +33,7 @@
         <kheperaiv_ground   implementation="rot_z_only" />
         <positioning implementation="default" />
       </sensors>
-      <params bytecode_file="build/buzz/belief.bo" debug_file="build/buzz/belief.bdb">
+      <params bytecode_file="build/buzz/main.bo" debug_file="build/buzz/main.bdb">
         <wheel_turning hard_turn_angle_threshold="90"
                        soft_turn_angle_threshold="70"
                        no_turn_angle_threshold="10"
@@ -48,7 +48,15 @@
   <loop_functions library="build/loop_functions/pattern_loop_functions/libpattern_loop_functions"
                   label="pattern_loop_functions"
                   output="results.txt">
-    <!-- PATTERN EXAMPLES
+    <!-- 2x2 PATTERN EXAMPLES
+         0  -> all black
+         15 -> all white
+         3  -> top side black, bottom side white
+         12 -> top side white, bottom side black
+         9  -> checkerboard with white in (0,0)
+         6 -> checkerboard with black in (0,0)
+    -->
+    <!-- 4x4 PATTERN EXAMPLES
          0     -> all black
          65535 -> all white
          255   -> top side black, bottom side white
@@ -58,14 +66,15 @@
          42405 -> checkerboard with white in (0,0)
          23130 -> checkerboard with black in (0,0)
     -->
-    <patterns cells_on_side="4"
-              pattern="23130" />
+    <patterns cells_on_side="2"
+              pattern="6" />
     <robots num_robots="10"
-            num_liars="2"
+            num_liars="5"
             comm_range="1.0"
             density="2.0"
-            good_fun="good_fun_basic"
-            bad_fun="bad_fun_constant"
+            good_fun="basic"
+            bad_fun="constant"
+            noise_prob="0"
             comm_period="10" />
   </loop_functions>
 

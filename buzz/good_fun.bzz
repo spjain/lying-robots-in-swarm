@@ -1,0 +1,120 @@
+EPSILON = 0.000001
+
+########################################
+#
+# Print status
+function print_status() {
+  # Print debugging information
+  if(pattern == picked_pattern) {
+    if(picked_pattern_num == 1) {
+      # Print in green if the robot converged to the correct pattern and nothing else
+      debug.set_color(0,255,0)
+    }
+    else {
+      # Print in blue if the pattern is correct, but other patterns have the same color
+      debug.set_color(0,0,255)
+    }
+  }
+  else {
+    # Print in red if the robot converged to the wrong pattern
+    debug.set_color(255,0,0)
+  }
+  # Print status
+  debug.print(pattern, ":", correct_pattern_prob, " / ", picked_pattern, ":", picked_pattern_prob, ":", picked_pattern_num)
+}
+
+########################################
+#
+# No-communication method
+#
+# Init function
+function good_fun_nocomm_init() {
+}
+#
+# Step function
+function good_fun_nocomm_step() {
+  # Update belief from ground sensors
+  belief = belief_update_sensing(belief)
+  # Normalize values
+  belief = belief_normalize(belief)
+  # Update variables read by loop functions
+  belief_update_lf(belief)
+  # Status
+  print_status()
+}
+
+########################################
+#
+# Basic method
+#
+# Init function
+function good_fun_basic_init() {
+  # Initialize list of received messages
+  recv = {}
+  # Listen to neighbors
+  neighbors.listen("bb", function(key, belf, robot) {
+      # Save received belief, making sure no value is zero
+      recv[size(recv)] = belief_normalize(
+        map(belf, function(k,v) { return v + EPSILON }))
+    })
+}
+#
+# Step function
+function good_fun_basic_step() {
+  # Initialize new belief
+  var newb = belief_new(0.0)
+  # Go through all the patterns
+  var p = 0
+  while(p < num_patterns) {
+    # Communication update
+    newb[p] = belief[p]
+    var i = 0
+    while(i < size(recv)) {
+      newb[p] = newb[p] * recv[i][p]
+      i = i + 1
+    }
+    p = p + 1
+  }
+  # Update belief from ground sensors
+  newb = belief_update_sensing(newb)
+  # Normalize values
+  belief = belief_normalize(newb)
+  # Update variables read by loop functions
+  belief_update_lf(belief)
+  # Broadcast belief
+  neighbors.broadcast("bb", belief)
+  # Clear received messages
+  recv = {}
+  # Status
+  print_status()
+}
+
+########################################
+#
+# Take the average
+#
+# Init function
+function good_fun_average_init() {
+  log("good_fun_average_init")
+  debug.set_color(0,255,0)
+}
+#
+# Step function
+function good_fun_average_step() {
+  log("good_fun_average_step")
+}
+
+########################################
+#
+# Filter extreme beliefs
+#
+# Init function
+function good_fun_filter_init() {
+  log("good_fun_filter_init")
+  debug.set_color(0,255,0)
+}
+#
+# Step function
+function good_fun_filter_step() {
+  log("good_fun_filter_step")
+}

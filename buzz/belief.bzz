@@ -1,124 +1,89 @@
-include "include/vec2.bzz"
-
 ########################################
 #
-# Global variables set in the loop functions
-#
-# comm_period  = the time between two message updates
-# num_liars    = the number of liars
-# good_fun     = the function that a non-lying robot must execute
-# bad_fun      = the function that a lying robot must execute
-# num_patterns = the total number of patterns
-# pattern      = the correct pattern (an integer)
-
-########################################
-#
-# Overall logic
-#
-# 1. The robots execute obstacle avoidance
-# 2. The robots are divided in two swarms: good and bad
-#    a. The non-lying robots exchange information according to good_fun
-#    b. The lying robots exchange information according to bad_fun
-
-########################################
-#
-# Swarm ids
-SWARM_BAD  = 1
-SWARM_GOOD = 2
-
-########################################
-#
-# Executed at init time
-function init() {
-  # Create the swarms of good and bad robots
-  bad = swarm.create(SWARM_BAD)
-  bad.select(id < num_liars)
-  good = bad.others(SWARM_GOOD)
-}
-
-########################################
-#
-# Executed at every step
-function step() {
-  obstacle_avoidance()
-  bad.exec(bad_fun)
-  good.exec(good_fun)
-}
-
-########################################
-#
-# Executed at the end of the experiment
-function destroy() {
-}
-
-########################################
-#
-# Obstacle avoidance logic
-function obstacle_avoidance() {
-  # Consider only frontal proximity sensors
-  var frontsensors = filter(proximity, function(k,v) {
-      return v.angle < math.pi / 2.0 or v.angle > 3.0 * math.pi / 2.0
-    })
-  # Transform table elements in cartesian coordinates
-  var cartesian = map(frontsensors, function(k,v) {
-      return math.vec2.newp(v.value, v.angle)
-    })
-  # Sum vectors together
-  var accum = reduce(cartesian, function(k,v,a) {
-      return math.vec2.add(a,v)
-    }, math.vec2.new(0,0))
-  # Rescale accumulator
-  math.vec2.scale(accum, 1.0 / size(cartesian))
-  # Get angle and length of accumulator
-  var angle = math.vec2.angle(accum)
-  var length = math.vec2.length(accum)
-  # If the angle of the vector is small enough and the closest obstacle
-  # is far enough, continue going straight, otherwise curve a little
-  # When the proximity sensors see nothing, accum is zero, so the robot
-  # just goes straight
-  if(math.abs(angle) < math.pi/10.0 and length < 0.1) {
-    set_wheels(10.0, 10.0)
+# Creates a new belief vector with the given value
+function belief_new(v) {
+  var b = {}
+  var i = 0
+  while(i < num_patterns) {
+    b[i] = v
+    i = i + 1
   }
-  else {
-    if(angle > 0.0) {
-      set_wheels(10.0, 0.0)
-    }
-    else {
-      set_wheels(0.0, 10.0)
-    }
+  return b
+}
+
+########################################
+#
+# Normalize belief
+function belief_normalize(bel) {
+  var sum = reduce(bel, function(k,v,s) { return s + v}, 0.0 )
+  return map(bel, function(k,v) { return v / sum })
+}
+
+########################################
+#
+# Performs the sensing-based part of the belief update
+function belief_update_sensing(bel) {
+  # Get actual ground readings and make sure they're the same for all sensors
+  if((ground[0].value != ground[1].value) or (ground[0].value != ground[2].value) or (ground[0].value != ground[3].value)) {
+    # Readings are not the same, skip calculations
+    return bel
   }
+  var act_read = (ground[0].value > 0.0)
+  # Calculate the arena position of the center of mass of the ground sensors
+  var gndpos = reduce(ground, function(k,v,sum) { return math.vec2.add(sum, v.offset) }, math.vec2.new(0.0, 0.0))
+  gndpos = math.vec2.scale(gndpos, 0.25)
+  gndpos = math.vec2.rotate(gndpos, pose.orientation.yaw)
+  gndpos = math.vec2.add(gndpos, pose.position)
+  # Get current cell index
+  var idx = pos_to_cell(gndpos.x, gndpos.y)
+  # Calculate new belief
+  return map(bel, function(k, v) {
+      # Get expected reading
+      var exp_read = ((k & (1 << idx)) > 0)
+      # Calculate new prob
+      if(exp_read == act_read) {
+        return v * (1-noise_prob)
+      }
+      else {
+        return v * noise_prob
+      }
+    })
 }
 
 ########################################
 #
-# Bad functions
-#
-# Constant belief
-function bad_fun_constant() {
-  
-}
-# Uniformly random belief
-function bad_fun_uniform() {
-  
-}
-# Periodic belief
-function bad_fun_periodic() {
-  
+# Loop function variables
+function belief_update_lf(bel) {
+  # Set probability of correct pattern
+  correct_pattern_prob = bel[pattern]
+  # Set index of picked pattern
+  picked_pattern_num = 0
+  picked_pattern = reduce(bel,
+    function(k,v,idx) {
+      if(bel[k] >= bel[idx]) {
+        if(bel[k] == bel[idx]) {
+          picked_pattern_num = picked_pattern_num + 1
+          return idx
+        }
+        else {
+          return k
+        }
+      }
+      else {
+        return idx
+      }
+    },
+    pattern)
+  # Set probability of picked pattern
+  picked_pattern_prob = bel[picked_pattern]
 }
 
 ########################################
 #
-# Good functions
-#
-# Basic method
-function good_fun_basic() {
-  
-}
-# Take the average
-function good_fun_average() {
-  
-}
-# Filter extreme beliefs
-function good_fun_filter() {
-  
+# Print belief
+function belief_print(bel) {
+  log(id, " BELIEF")
+  foreach(bel, function(k,v) {
+      log("    ", k, " -> ", v)
+    })
 }
