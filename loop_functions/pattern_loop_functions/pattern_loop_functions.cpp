@@ -30,6 +30,7 @@ void CPatternLoopFunctions::Init(TConfigurationNode& t_tree) {
                 << "Robot\t"
                 << "X\t"
                 << "Y\t"
+                << "PickedPatternNum\t"
                 << "PickedPattern\t"
                 << "PickedPatternProb\t"
                 << "CorrectPatternProb\n";
@@ -117,9 +118,11 @@ void CPatternLoopFunctions::PostStep() {
    SInt32 nPickedPattern;
    Real fPickedPatternProb;
    Real fCorrectPatternProb;
+   SInt32 nPickedPatternNum;
    /* Go through non-lying robots */
    for(size_t i = 0; i < m_vecGoodVMs.size(); ++i) {
       /* Get data from the VM */
+      FetchInt(m_vecGoodVMs[i], "picked_pattern_num", nPickedPatternNum);
       FetchInt(m_vecGoodVMs[i], "picked_pattern", nPickedPattern);
       FetchFloat(m_vecGoodVMs[i], "picked_pattern_prob", fPickedPatternProb);
       FetchFloat(m_vecGoodVMs[i], "correct_pattern_prob", fCorrectPatternProb);
@@ -128,6 +131,7 @@ void CPatternLoopFunctions::PostStep() {
                 << m_vecGoodVMs[i]->robot               << "\t"  // robot id
                 << m_vecGoodAnchors[i]->Position.GetX() << "\t"  // pos x
                 << m_vecGoodAnchors[i]->Position.GetY() << "\t"  // pos y
+                << nPickedPatternNum                    << "\t"  // num of picked patterns
                 << nPickedPattern                       << "\t"  // picked pattern code
                 << fPickedPatternProb                   << "\t"  // picked pattern
                 << fCorrectPatternProb                  << "\n"; // correct pattern
