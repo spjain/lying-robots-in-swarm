@@ -1,3 +1,5 @@
+include "include/table.bzz"
+
 ########################################
 #
 # Print status
@@ -104,15 +106,71 @@ function good_fun_average_step() {
 
 ########################################
 #
-# Filter extreme beliefs
+# Filter extreme beliefs using cosine
 #
 # Init function
 function good_fun_filter_init() {
-  log("good_fun_filter_init")
-  debug.set_color(0,255,0)
+  # Initialize list of received messages
+  recv = {}
+  # Listen to neighbors
+  neighbors.listen("bb", function(key, belf, robot) {
+      # Save received belief, making sure no value is zero
+      recv[size(recv)] = belief_normalize(
+        map(belf, function(k,v) { return v + EPSILON }))
+    })
 }
 #
 # Step function
 function good_fun_filter_step() {
-  log("good_fun_filter_step")
+  # New belief
+  var newb
+  # Make sure there are messages to listen to
+  if(size(recv) > num_liars) {
+    # Initialize new belief
+    newb = belief_new(0.0)
+    # Go through all the messages and compute their similarity to the current
+    # belief
+    recv = map(recv, function(k, v) {
+        var dff = belief_compare(belief, v)
+        return { .bel = v, .diff = dff }
+      })
+    # Sort the messages by similarity
+    table.sort(recv, function(b1, b2) {
+        if(b1.diff <= b2.diff) return 1
+        else return 0
+      })
+    # Eliminate messages with high similarity
+    recv = map(recv, function(k,v) {
+        if(k > num_liars) return nil
+        else return v
+      })
+    # Go through all the remaining patterns and update the belief
+    var p = 0
+    while(p < num_patterns) {
+      # Communication update
+      newb[p] = belief[p]
+      var i = 0
+      while(i < size(recv)) {
+        newb[p] = newb[p] * recv[i].bel[p]
+        i = i + 1
+      }
+      p = p + 1
+    }
+  }
+  else {
+    # Not enough messages
+    newb = belief
+  }
+  # Update belief from ground sensors
+  newb = belief_update_sensing(newb)
+  # Normalize values
+  belief = belief_normalize(newb)
+  # Update variables read by loop functions
+  belief_update_lf(belief)
+  # Broadcast belief
+  neighbors.broadcast("bb", belief)
+  # Clear received messages
+  recv = {}
+  # Status
+  print_status()
 }
