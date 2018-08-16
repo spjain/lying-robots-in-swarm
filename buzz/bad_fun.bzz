@@ -34,7 +34,7 @@ function bad_fun_uniform_init() {
 }
 #
 # Step function
-function bad_fun_uniform_init() {
+function bad_fun_uniform_step() {
   log("bad_fun_uniform_step")
 }
 

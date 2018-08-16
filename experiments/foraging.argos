@@ -93,7 +93,8 @@
   <!-- ****************** -->
   <loop_functions library="build/loop_functions/pattern_loop_functions/libpattern_loop_functions"
                   label="pattern_loop_functions">
-    <foraging num_robots="22"
+    <foraging lying_robots="4"
+      comm_range="1.0"
               output="trial0.dat" />
   </loop_functions>
 
