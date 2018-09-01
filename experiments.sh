@@ -1,27 +1,37 @@
-i="1"
-algo="Algo2_average_belief_limited_comm"
-j="1"
-k="1"
-mkdir data/"${algo}"
-while [ $k -le 4 ]
+#!/usr/bin/env bash
+#SBATCH -J liarsRun
+#SBATCH -n 8
+#SBATCH -N 1
+#SBATCH -p short
+#SBATCH --mem 24G
+#SBATCH -C E5-2695
+
+# Stop execution after any error
+set -e
+good_fun="basic"
+bad_fun="constant"
+cells_on_side="2"
+pattern="6"
+noise_prob="0.1"
+comm_period="1"
+num_robots="10"
+# num_liars="1"
+# comm_range="1"
+# density="0.5"
+trialLow=$1
+trialHigh=$2
+for num_liars in $(seq 1 1 5)
 do
-	mkdir data/"${algo}"/num_lying_"${k}"
-	sed -e "s|LIARS|${k}|" buzz/"${algo}".bzz1 > buzz/"${algo}".bzz
-	cd build
-	make
-	cd ..
-	j="1"
-	while [ $j -le 1 ]
+	for comm_range in $(seq 1 1 3)
 	do
-		mkdir data/"${algo}"/num_lying_"${k}"/"${j}"
-		i="1"
-		while [ $i -le 20 ]
+		for density in $(seq 0.5 0.5 2)
 		do
-  			sed -e "s|RUN|${i}|" -e "s|COMMRANGE|${j}|" -e "s|LIARS|${k}|" -e "s/ALGO/${algo}/g" experiments/foraging_temp.argos > experiments/foraging_run.argos
-  			argos3 -c experiments/foraging_run.argos
-  			i=$[$i+1]
-		done
-		j=$[$j+1]
-	done
-	k=$[$k+1]
+			mkdir -p data/good_"${good_fun}"/bad_"${bad_fun}"/side_"${cells_on_side}"/pattern_"${pattern}"/noise_"${noise_prob}"/comm_"${comm_period}"/num_robots_"${num_robots}"/num_lying_"${num_liars}"/range_"${comm_range}"/density_"${density}"/
+			for trial in $(seq trialLow 1 trialHigh)
+			do
+				sed -e "s|RUN|${trial}|" -e "s|GOOD_FUN|${good_fun}|" -e "s|BAD_FUN|${bad_fun}|" -e "s|SIDE|${cells_on_side}|" -e "s|PATTERN|${pattern}|" -e "s|NOISE|${noise_prob}|" -e "s|COMM_PERIOD|${comm_period}|" -e "s|NUM_ROBOTS|${num_robots}|" -e "s|NUM_LIARS|${num_liars}|" -e "s|COMM_RANGE|${comm_range}|" -e "s|DENSITY|${density}|" experiments/pattern_temp.argos > experiments/pattern_run.argos
+  				argos3 -c experiments/pattern_run.argos
+  			done
+  		done
+  	done
 done
