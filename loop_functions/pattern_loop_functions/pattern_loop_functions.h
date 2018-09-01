@@ -19,6 +19,7 @@ public:
    virtual void Destroy();
    virtual CColor GetFloorColor(const CVector2& c_pos);
    virtual void PostStep();
+   bool IsExperimentFinished();
 
 private:
 
