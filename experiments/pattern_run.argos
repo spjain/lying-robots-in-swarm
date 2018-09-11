@@ -15,7 +15,7 @@
     <system threads="2" />
     <experiment length="0"
                 ticks_per_second="10"
-                random_seed="5" />
+                random_seed="8" />
   </framework>
 
   <!-- *************** -->
@@ -47,7 +47,7 @@
   <!-- ****************** -->
   <loop_functions library="build/loop_functions/pattern_loop_functions/libpattern_loop_functions"
                   label="pattern_loop_functions"
-                  output="data/good_basic/bad_constant/side_2/pattern_6/noise_0.1/comm_1/num_robots_10/num_lying_5/range_1/density_2.0/trial5.txt">
+                  output="data/good_basic/bad_constant/side_2/pattern_6/noise_0.1/comm_1/num_robots_10/num_lying_5/range_1/density_0.5/trial8.txt">
     <!-- 2x2 6 EXAMPLES
          0  -> all black
          15 -> all white
@@ -71,7 +71,7 @@
     <robots num_robots="10"
             num_liars="5"
             comm_range="1"
-            density="2.0"
+            density="0.5"
             good_fun="basic"
             bad_fun="constant"
             noise_prob="0.1"

@@ -71,7 +71,7 @@ void CPatternLoopFunctions::Init(TConfigurationNode& t_tree) {
 /****************************************/
 
 bool CPatternLoopFunctions::IsExperimentFinished() {
-  if(GetSpace().GetSimulationClock() >= 800){
+  if(GetSpace().GetSimulationClock() >= 1600){
     // ResultFile << GetSpace().GetSimulationClock() << std::endl;
     // ResultFile << correct_belief_num_robot << std::endl;
     return true;
