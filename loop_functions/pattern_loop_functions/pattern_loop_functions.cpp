@@ -71,7 +71,7 @@ void CPatternLoopFunctions::Init(TConfigurationNode& t_tree) {
 /****************************************/
 
 bool CPatternLoopFunctions::IsExperimentFinished() {
-  if(GetSpace().GetSimulationClock() >= 1600){
+  if(GetSpace().GetSimulationClock() >= 300*m_fArenaSide){
     // ResultFile << GetSpace().GetSimulationClock() << std::endl;
     // ResultFile << correct_belief_num_robot << std::endl;
     return true;
@@ -248,7 +248,8 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
             dynamic_cast<CBuzzController&>(
                pcKhIV->GetControllableEntity().GetController()).
             GetBuzzVM();
-         if(i >= un_liars) {
+         //if(i >= un_liars) {
+         if(i >= 0) {
             m_vecGoodAnchors.push_back(&pcKhIV->GetEmbodiedEntity().GetOriginAnchor());
             m_vecGoodVMs.push_back(tBuzzVM);
          }
