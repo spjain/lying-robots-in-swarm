@@ -15,7 +15,7 @@
     <system threads="2" />
     <experiment length="0"
                 ticks_per_second="10"
-                random_seed="12345" />
+                random_seed="20" />
   </framework>
 
   <!-- *************** -->
@@ -68,14 +68,14 @@
     -->
     <patterns cells_on_side="2"
               pattern="6" />
-    <robots num_robots="10"
-            num_liars="1"
-            comm_range="1.0"
-            density="2.0"
-            good_fun="basic"
+    <robots num_robots="20"
+            num_liars="2"
+            comm_range="5.0"
+            density="10"
+            good_fun="iou"
             bad_fun="constant"
-            noise_prob="0.1"
-            comm_period="10" />
+            noise_prob="0.0"
+            comm_period="1" />
   </loop_functions>
 
   <!-- *********************** -->
