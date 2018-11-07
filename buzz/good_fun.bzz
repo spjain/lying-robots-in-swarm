@@ -140,16 +140,18 @@ function good_fun_filter_step() {
         else return 0
       })
     # Eliminate messages with high similarity
-    recv = map(recv, function(k,v) {
-        if(k > num_liars) return nil
-        else return v
-      })
+    # recv = map(recv, function(k,v) {
+    #     # if (id == 1) log(k)
+    #     # if (id == 1) log(v)
+    #     if(k > num_liars) return nil
+    #     else return v
+    #   })
     # Go through all the remaining patterns and update the belief
     var p = 0
     while(p < num_patterns) {
       # Communication update
       newb[p] = belief[p]
-      var i = 0
+      var i = num_liars
       while(i < size(recv)) {
         newb[p] = newb[p] * recv[i].bel[p]
         i = i + 1
@@ -174,3 +176,93 @@ function good_fun_filter_step() {
   # Status
   print_status()
 }
+
+
+########################################
+#
+# Filter extreme beliefs using threshold over Intersection over Union 
+#
+# Init function
+function good_fun_iou_init() {
+  # Initialize list of received messages
+  recv = {}
+  # Listen to neighbors
+  neighbors.listen("bb", function(key, belf, robot) {
+      # Save received belief, making sure no value is zero
+      recv[size(recv)] = belief_normalize(
+        map(belf, function(k,v) { return v + EPSILON }))
+    })
+}
+
+#
+# Step function
+function good_fun_iou_step() {
+  # New belief
+  var newb
+  bin_thresh = 1.0/num_patterns
+  thresh = 1.0/(0.9*num_patterns/2)
+  if (size(recv) > 0)
+  {
+
+    # Initialize new belief
+    newb = belief_new(0.0)
+    iou = {}
+    bin_recv = map(recv, function(k, v) {
+      bin_bel = binarise_belief(v, bin_thresh)
+      return bin_bel
+    })
+    bin_self = binarise_belief(belief, bin_thresh)
+    scores = map(bin_recv, function(k, v) {
+      var i = 0
+      intersection = 0
+      union = 0
+      while (i < num_patterns) {
+        if (v[i] == 1 and bin_self[i] == 1){
+          intersection = intersection + 1
+        }
+        if (v[i] == 1 or bin_self[i] == 1) {
+          union = union + 1
+        }
+        i = i + 1
+      }
+      if (union == 0) union = 1
+      return intersection*1.0/union 
+    })
+    if (id == 3) log('---------')
+    if (id == 3) {
+      foreach(scores, function(k, v) {
+          log(v)
+        })
+    }
+    # Go through all the patterns and update the belief
+    var p = 0
+    while(p < num_patterns) {
+      # Communication update
+      newb[p] = belief[p]
+      var i = 0
+      while(i < size(recv)) {
+        if (scores[i] > thresh)
+          newb[p] = newb[p] * recv[i][p]
+        i = i + 1
+      }
+      p = p + 1
+    }
+  }
+  else {
+    # Not enough messages
+    newb = belief
+  }
+  # Update belief from ground sensors
+  newb = belief_update_sensing(newb)
+  # Normalize values
+  belief = belief_normalize(newb)
+  # Update variables read by loop functions
+  belief_update_lf(belief)
+  # Broadcast belief
+  neighbors.broadcast("bb", belief)
+  # Clear received messages
+  recv = {}
+  # Status
+  print_status()
+}
+
