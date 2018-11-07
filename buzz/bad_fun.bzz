@@ -21,6 +21,7 @@ function bad_fun_constant_init() {
 #
 # Step function
 function bad_fun_constant_step() {
+  neighbors.broadcast("bb", belief)
 }
 
 ########################################
