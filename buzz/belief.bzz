@@ -45,11 +45,13 @@ function belief_update_sensing(bel) {
       var exp_read = ((k & (1 << idx)) > 0)
       # Calculate new prob
       if(exp_read == act_read) {
-        return v * (1-noise_prob) + EPSILON
+        v = v * (1-noise_prob)
       }
       else {
-        return v * noise_prob + EPSILON
+        v = v * noise_prob
       }
+      if (v < 2*EPSILON) v = v + EPSILON
+      return v
     })
 }
 
@@ -94,6 +96,16 @@ function belief_compare(b1, b2) {
         return acc + v * b2[k]
       }, 0.0))
 }
+
+
+function binarise_belief(belief, bin_thresh){
+  out = map(belief, function(k, v) { 
+    if (v > bin_thresh) return 1
+    else return 0
+  })
+  return out
+}
+
 
 ########################################
 #
