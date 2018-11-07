@@ -248,8 +248,8 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
             dynamic_cast<CBuzzController&>(
                pcKhIV->GetControllableEntity().GetController()).
             GetBuzzVM();
-         //if(i >= un_liars) {
-         if(i >= 0) {
+         if(i >= un_liars) {
+         //if(i >= 0) {
             m_vecGoodAnchors.push_back(&pcKhIV->GetEmbodiedEntity().GetOriginAnchor());
             m_vecGoodVMs.push_back(tBuzzVM);
          }
