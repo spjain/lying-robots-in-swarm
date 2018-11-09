@@ -228,12 +228,6 @@ function good_fun_iou_step() {
       if (union == 0) union = 1
       return intersection*1.0/union 
     })
-    if (id == 3) log('---------')
-    if (id == 3) {
-      foreach(scores, function(k, v) {
-          log(v)
-        })
-    }
     # Go through all the patterns and update the belief
     var p = 0
     while(p < num_patterns) {
