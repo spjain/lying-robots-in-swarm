@@ -17,16 +17,21 @@ def getVals(params, vals, index, dataFolder):
 	newVals.sort()
 	return newVals
 
-def checkSuccess(table):
-	numSteps = 1600
+def checkSuccess(table, params, vals):
+	numSteps = int(table.iloc[-1]['Time'])
 	lastStep = table[table['Time'] == numSteps]
+	# lastStep = table.tail(int(vals[params.index('num_robots')]))
 	for i in lastStep['Robot'].values:
+		# if int(i) < int(vals[params.index('num_lying')]):
+		# 	continue
 		robotState = lastStep[lastStep['Robot'] == i].squeeze()
-		# if robotState['PickedPatternProb'] == robotState['CorrectPatternProb'] and robotState['PickedPatternNum'] <= 4:
-		if robotState['PickedPatternProb'] == robotState['CorrectPatternProb']:
-			return True
+		if robotState['PickedPatternProb'] == robotState['CorrectPatternProb'] and robotState['PickedPatternNum'] == 1:
+		# if robotState['PickedPatternProb'] == robotState['CorrectPatternProb']:
+			continue
 		else:
 			return False
+
+	return True
 
 dataFolder = 'data/'
 path = 'good_basic/bad_constant/side_2/pattern_6/noise_0.49/comm_1/num_robots_10/num_lying_1/range_3/density_1.0/'
@@ -63,7 +68,7 @@ vals1 = getVals(params, vals, index1, dataFolder)
 vals2 = getVals(params, vals, index2, dataFolder)
 vals3 = getVals(params, vals, index3, dataFolder)
 vals4 = getVals(params, vals, index4, dataFolder)
-
+print(vals1)
 # fig = plt.figure()
 fig, axs = plt.subplots(len(vals3), len(vals4), sharex=True, sharey=True)
 for row in vals3:
@@ -79,8 +84,9 @@ for row in vals3:
 				path = dataFolder+makePath(params, vals, 0, len(params))
 				success = 0
 				for trial in os.listdir(path):
+					# print(path+trial)
 					table = pd.read_table(path+trial)
-					if (checkSuccess(table)):
+					if (checkSuccess(table, params, vals)):
 						success = success + 1
 					# else:
 					# 	print (path + trial)
