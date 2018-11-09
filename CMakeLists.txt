@@ -27,13 +27,14 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ARGOS_PREFIX}/share/argos3/cmake)
 
 # Check whether all the necessary libs have been installed to compile the
 # code that depends on Qt and OpenGL
-include(ARGoSCheckQTOpenGL)
+#include(ARGoSCheckQTOpenGL)
 
 # Find Lua
-find_package(Lua52 REQUIRED)
+#find_package(Lua52 REQUIRED)
 
 # Set ARGoS include dir
-include_directories(${CMAKE_SOURCE_DIR} ${ARGOS_INCLUDE_DIRS} ${LUA_INCLUDE_DIR})
+#include_directories(${CMAKE_SOURCE_DIR} ${ARGOS_INCLUDE_DIRS} ${LUA_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR} ${ARGOS_INCLUDE_DIRS})
 
 # Set ARGoS link dir
 link_directories(${ARGOS_LIBRARY_DIRS})

@@ -3,3 +3,4 @@ build/
 data_copy/
 *.png
 results.txt
+CMakeLists.txt
