@@ -8,6 +8,11 @@ function bad_fun_constant_init() {
   debug.set_color(255,0,0)
   # Pick a pattern at random, making sure it's the wrong one
   pp = math.rng.uniform(num_patterns)
+  count = 0
+  while(count <= id){
+    pp = math.rng.uniform(num_patterns)
+    count = count + 1
+  }
   while(pp == pattern) {
     pp = math.rng.uniform(num_patterns)
   }
@@ -21,23 +26,55 @@ function bad_fun_constant_init() {
 #
 # Step function
 function bad_fun_constant_step() {
+  debug.print(pp)
   neighbors.broadcast("bb", belief)
 }
 
+
+
 ########################################
 #
-# Uniformly random belief
+# Lying robots all conspire and give same wrong pattern to have highest belief
+#
+# Init function
+function bad_fun_sameConstant_init() {
+  log("bad_fun_sameConstant_init")
+  debug.set_color(255,0,0)
+  pp = wrong_pattern
+  # Make new belief with all zeroes and a 1 for the picked pattern
+  belief = belief_new(0.0)
+  belief[pp] = 1.0
+  # Broadcast belief (it stays constant throughout the run)
+  neighbors.broadcast("bb", belief)
+
+}
+#
+# Step function
+function bad_fun_sameConstant_step() {
+  debug.print(wrong_pattern)
+  neighbors.broadcast("bb", belief)
+}
+
+
+########################################
+#
+# Lying robots give uniform belief for all templates
 #
 # Init function
 function bad_fun_uniform_init() {
   log("bad_fun_uniform_init")
   debug.set_color(255,0,0)
+  belief = belief_new(1.0/num_patterns)
+  belief[pattern] = 0
+  belief = belief_normalize(belief)
+  neighbors.broadcast("bb", belief)
 }
 #
 # Step function
 function bad_fun_uniform_step() {
-  log("bad_fun_uniform_step")
+  neighbors.broadcast("bb", belief)
 }
+
 
 ########################################
 #
@@ -47,9 +84,22 @@ function bad_fun_uniform_step() {
 function bad_fun_periodic_init() {
   log("bad_fun_periodic_init")
   debug.set_color(255,0,0)
+  change_time = math.floor((experiment_time*1.0/wrong_frequency)/(num_patterns-1))
+  if (pattern == 0) wrong_pattern = 1
+  else wrong_pattern = 0
+  belief = belief_new(0.0)
+  belief[wrong_pattern] = 1.0
+  neighbors.broadcast("bb", belief)
 }
 #
 # Step function
 function bad_fun_periodic_step() {
-  log("bad_fun_periodic_step")
+  if (stepcount % change_time == 0){
+    wrong_pattern = (wrong_pattern + 1) % num_patterns
+    if (wrong_pattern == pattern) wrong_pattern = (wrong_pattern + 1) % num_patterns
+    belief = belief_new(0.0)
+    belief[wrong_pattern] = 1.0
+  }
+  neighbors.broadcast("bb", belief)
+  debug.print(wrong_pattern)
 }
