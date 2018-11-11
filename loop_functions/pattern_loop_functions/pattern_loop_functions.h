@@ -52,11 +52,14 @@ private:
 
    /* Arena side */
    Real m_fArenaSide;
+   Real m_fExptTime;
    /* Number of individual black/white cells on a side of the arena */
    UInt32 m_unNumCellsOnSide;
 
    /* Pattern binary encoding */
    UInt64 m_unPattern;
+   UInt64 m_unWrongPattern;
+   UInt64 m_unWrongFrequency;
 
    /* Output file name */
    std::string m_strOutput;
