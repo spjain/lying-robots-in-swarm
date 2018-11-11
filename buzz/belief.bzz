@@ -71,6 +71,7 @@ function belief_update_lf(bel) {
           return idx
         }
         else {
+          picked_pattern_num = 1
           return k
         }
       }
@@ -92,9 +93,16 @@ function belief_update_lf(bel) {
 # Two beliefs are 0 when they are identical, and increasingly closer to
 # 1 when they differ.
 function belief_compare(b1, b2) {
-  return math.abs(reduce(b1, function(k,v,acc) {
+  dot_prod = math.abs(reduce(b1, function(k,v,acc) {
         return acc + v * b2[k]
       }, 0.0))
+  mag_b1 = math.sqrt(reduce(b1, function(k,v,acc) {
+        return acc + v * v
+      }, 0.0))
+  mag_b2 = math.sqrt(reduce(b2, function(k,v,acc) {
+        return acc + v * v
+      }, 0.0))
+  return dot_prod/(mag_b1*mag_b2)
 }
 
 
