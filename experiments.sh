@@ -11,7 +11,7 @@ set -e
 # bad_fun="constant"
 cells_on_side="2"
 pattern="6"
-wrong_frequency="2"
+wrong_frequency="1"
 wrong_pattern="3"
 #noise_prob="0.1"
 comm_period="1"
@@ -21,13 +21,13 @@ comm_range="1"
 # density="0.5"
 trialLow=$1
 trialHigh=$2
-for noise_prob in 0.0 0.1 0.25 0.49
+for noise_prob in 0.0 0.25 0.49
 do
-	for density in 0.5 1 2 3
+	for density in 1 2 3
 	do
-		for bad_fun in "constant" "sameConstant" "uniform" "periodic"
+		for bad_fun in "constant" "sameConstant" "uniform" "periodic" "evilSame"
 		do
-			for good_fun in "basic" "cosine" "iou"
+			for good_fun in "basic" "cosine" "iou" "maxiou"
 			do
 				for num_liars in 10 20 30 40 50
 				do

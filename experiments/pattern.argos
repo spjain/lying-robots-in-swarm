@@ -73,9 +73,9 @@
     <robots num_robots="10"
             num_liars="30"
             comm_range="1.0"
-            density="2"
-            good_fun="iou"
-            bad_fun="sameConstant"
+            density="6"
+            good_fun="maxiou"
+            bad_fun="constant"
             noise_prob="0.3"
             comm_period="100" />
   </loop_functions>

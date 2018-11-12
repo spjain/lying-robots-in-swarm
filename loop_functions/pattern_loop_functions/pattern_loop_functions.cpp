@@ -139,7 +139,7 @@ bool CPatternLoopFunctions::IsExperimentFinished() {
    }
   }
 
-  if(GetSpace().GetSimulationClock() >= 3000 || flag == 1){
+  if(GetSpace().GetSimulationClock() >= m_fExptTime || flag == 1){
     // ResultFile << GetSpace().GetSimulationClock() << std::endl;
     // ResultFile << correct_belief_num_robot << std::endl;
     return true;
@@ -224,7 +224,7 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
       Real fCommArea = CRadians::PI.GetValue() * Square(f_commrange);
       /* Calculate side of the region in which the robots are scattered */
       m_fArenaSide = Sqrt((fCommArea * un_robots) / f_density);
-      m_fExptTime = 300*m_fArenaSide;
+      m_fExptTime = 600*m_fArenaSide;
       CRange<Real> cAreaRange(0.0, m_fArenaSide);
       /* Place walls */
       Real fArenaSide2 = m_fArenaSide / 2.0;
