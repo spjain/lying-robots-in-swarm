@@ -139,7 +139,7 @@ bool CPatternLoopFunctions::IsExperimentFinished() {
    }
   }
 
-  if(GetSpace().GetSimulationClock() >= m_fExptTime || flag == 1){
+  if(GetSpace().GetSimulationClock() >= 3000 || flag == 1){
     // ResultFile << GetSpace().GetSimulationClock() << std::endl;
     // ResultFile << correct_belief_num_robot << std::endl;
     return true;
