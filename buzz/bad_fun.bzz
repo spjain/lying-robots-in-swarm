@@ -103,3 +103,26 @@ function bad_fun_periodic_step() {
   neighbors.broadcast("bb", belief)
   debug.print(wrong_pattern)
 }
+
+
+########################################
+#
+# Evil belief
+#
+# Init function
+function bad_fun_evilSame_init() {
+  log("bad_fun_evil_init")
+  debug.set_color(255,0,0)
+  belief = belief_new(1.0/num_patterns)
+  neighbors.broadcast("bb", belief)
+}
+#
+# Step function
+function bad_fun_evilSame_step() {
+  print_status()
+  belief = belief_update_sensing_evil(belief)
+  belief = belief_normalize(belief)
+  belief_update_lf(belief)
+  neighbors.broadcast("bb", belief)
+  # debug.print(wrong_pattern)
+}
