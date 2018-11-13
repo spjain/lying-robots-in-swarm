@@ -71,6 +71,7 @@ function belief_update_lf(bel) {
           return idx
         }
         else {
+          picked_pattern_num = 1
           return k
         }
       }
@@ -92,9 +93,16 @@ function belief_update_lf(bel) {
 # Two beliefs are 0 when they are identical, and increasingly closer to
 # 1 when they differ.
 function belief_compare(b1, b2) {
-  return math.abs(reduce(b1, function(k,v,acc) {
+  dot_prod = math.abs(reduce(b1, function(k,v,acc) {
         return acc + v * b2[k]
       }, 0.0))
+  mag_b1 = math.sqrt(reduce(b1, function(k,v,acc) {
+        return acc + v * v
+      }, 0.0))
+  mag_b2 = math.sqrt(reduce(b2, function(k,v,acc) {
+        return acc + v * v
+      }, 0.0))
+  return dot_prod/(mag_b1*mag_b2)
 }
 
 
@@ -114,5 +122,45 @@ function belief_print(bel) {
   log(id, " BELIEF")
   foreach(bel, function(k,v) {
       log("    ", k, " -> ", v)
+    })
+}
+
+
+
+########################################
+#
+# Performs the sensing-based part of the belief update
+function belief_update_sensing_evil(bel) {
+  # Get actual ground readings and make sure they're the same for all sensors
+  if((ground[0].value != ground[1].value) or (ground[0].value != ground[2].value) or (ground[0].value != ground[3].value)) {
+    # Readings are not the same, skip calculations
+    return bel
+  }
+  
+  # var act_read = (ground[0].value > 0.0)
+  # Apply noise
+  # if(math.rng.uniform(1.0) < noise_prob) act_read = !act_read
+  # Calculate the arena position of the center of mass of the ground sensors
+  var gndpos = reduce(ground, function(k,v,sum) { return math.vec2.add(sum, v.offset) }, math.vec2.new(0.0, 0.0))
+  gndpos = math.vec2.scale(gndpos, 0.25)
+  gndpos = math.vec2.rotate(gndpos, pose.orientation.yaw)
+  gndpos = math.vec2.add(gndpos, pose.position)
+  # Get current cell index
+  var idx = pos_to_cell(gndpos.x, gndpos.y)
+  # Simulate actual reading
+  var act_read = ((wrong_pattern & (1 << idx)) > 0)
+  # Calculate new belief
+  return map(bel, function(k, v) {
+      # Get expected reading
+      var exp_read = ((k & (1 << idx)) > 0)
+      # Calculate new prob
+      if(exp_read == act_read) {
+        v = v * (1-noise_prob)
+      }
+      else {
+        v = v * noise_prob
+      }
+      if (v < 2*EPSILON) v = v + EPSILON
+      return v
     })
 }

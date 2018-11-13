@@ -67,15 +67,17 @@
          23130 -> checkerboard with black in (0,0)
     -->
     <patterns cells_on_side="2"
-              pattern="6" />
-    <robots num_robots="20"
-            num_liars="2"
-            comm_range="5.0"
-            density="10"
-            good_fun="iou"
+              pattern="6"
+              wrong_pattern="3"
+              wrong_frequency="1" />
+    <robots num_robots="10"
+            num_liars="30"
+            comm_range="1.0"
+            density="6"
+            good_fun="maxiou"
             bad_fun="constant"
-            noise_prob="0.0"
-            comm_period="1" />
+            noise_prob="0.3"
+            comm_period="100" />
   </loop_functions>
 
   <!-- *********************** -->

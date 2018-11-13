@@ -64,15 +64,18 @@ function init() {
 function lf_init() {
   # Used to prevent any belief to go to zero
   EPSILON = 0.0001 / num_patterns
+  max_comm_period = get_max_comm_period()
+  comm_period = 1
   # Create the swarms of good and bad robots
   bad = swarm.create(SWARM_BAD)
   bad.select(id < num_liars)
   good = bad.others(SWARM_GOOD)
   # Call initialization function
-  bad.exec(bad_fun_init)
   good.exec(good_fun_init)
   # Initialize belief
   belief = belief_new(1.0 / num_patterns)
+  pure_belief = belief_new(1.0 / num_patterns)
+  bad.exec(bad_fun_init)
   # Initialize step counter
   stepcount = 0
 }
@@ -82,12 +85,13 @@ function lf_init() {
 # Executed at every step
 function step() {
   # Update step counter
-  stepcount = (stepcount + 1) % comm_period
+  stepcount = stepcount + 1
   # Perform motion
   obstacle_avoidance()
   # Execute logic
   bad.exec(bad_fun_step)
   good.exec(good_fun_step)
+  comm_period = get_comm_period()
 }
 
 ########################################
@@ -108,6 +112,32 @@ function pos_to_cell(x, y) {
 }
 # Returns true if it's time to listen to neighbors
 function should_listen() {
+  if (comm_period == 0) comm_period = 1
   return stepcount % comm_period == 0
 }
 
+function get_comm_period(){
+  bin_self = binarise_belief(belief, 1.0/num_patterns)
+  num_ones = reduce(bin_self, function(k,v,s) { return s + v}, 0.0 )
+  if (num_ones == 0) num_ones = num_patterns
+  return math.ceil(max_comm_period*(num_patterns - num_ones)/(num_patterns - 1))
+}
+
+function get_max_comm_period(){
+  belief = belief_new(EPSILON)
+  belief[0] = 1
+  belief = belief_normalize(belief)
+  count = 1
+  bin_thresh = 1.0/num_patterns
+  while (belief[0] >= bin_thresh){
+    var i = 1
+    belief[0] = belief[0]*noise_prob
+    while (i < num_patterns){
+      belief[i] = belief[i]*(1 - noise_prob)
+      i = i+1
+    }
+    belief = belief_normalize(belief)
+    count = count + 1
+  }
+  return count
+}

@@ -38,12 +38,15 @@ void CPatternLoopFunctions::Init(TConfigurationNode& t_tree) {
       TConfigurationNode& tPatterns = GetNode(t_tree, "patterns");
       GetNodeAttribute(tPatterns, "cells_on_side", m_unNumCellsOnSide);
       GetNodeAttribute(tPatterns, "pattern", m_unPattern);
+      GetNodeAttribute(tPatterns, "wrong_pattern", m_unWrongPattern);
+      GetNodeAttribute(tPatterns, "wrong_frequency", m_unWrongFrequency);
       /* Parse robot-related parameters */
       TConfigurationNode& tRobots = GetNode(t_tree, "robots");
       UInt32 unNumRobots;
       GetNodeAttribute(tRobots, "num_robots",  unNumRobots);
       UInt32 unNumLiars;
       GetNodeAttribute(tRobots, "num_liars",   unNumLiars);
+      unNumLiars = int(unNumLiars*1.0/100 * unNumRobots);
       Real fCommRange;
       GetNodeAttribute(tRobots, "comm_range",  fCommRange);
       Real fDensity;
@@ -65,22 +68,6 @@ void CPatternLoopFunctions::Init(TConfigurationNode& t_tree) {
    catch(CARGoSException& ex) {
       THROW_ARGOSEXCEPTION_NESTED("Error parsing loop functions!", ex);
    }
-}
-
-/****************************************/
-/****************************************/
-
-bool CPatternLoopFunctions::IsExperimentFinished() {
-  if(GetSpace().GetSimulationClock() >= 300*m_fArenaSide){
-    // ResultFile << GetSpace().GetSimulationClock() << std::endl;
-    // ResultFile << correct_belief_num_robot << std::endl;
-    return true;
-  }
-  // if(correct_belief_num_robot == truthfulRobots){
-  //   ResultFile << GetSpace().GetSimulationClock() << std::endl;
-  //   return true;
-  // }
-  return false;
 }
 
 void CPatternLoopFunctions::Destroy() {
@@ -126,6 +113,44 @@ buzzvm_state FetchFloat(buzzvm_t t_vm,
    f_value = buzzvm_stack_at(t_vm, 1)->f.value;
    return BUZZVM_STATE_READY;
 }
+
+
+/****************************************/
+/****************************************/
+
+bool CPatternLoopFunctions::IsExperimentFinished() {
+  int flag = 0;
+  if(GetSpace().GetSimulationClock() >= 10){
+    flag = 1;
+    SInt32 nPickedPattern;
+    Real fPickedPatternProb;
+    Real fCorrectPatternProb;
+    SInt32 nPickedPatternNum;
+    /* Go through non-lying robots */
+   for(size_t i = 0; i < m_vecGoodVMs.size(); ++i) {
+      /* Get data from the VM */
+      FetchInt(m_vecGoodVMs[i], "picked_pattern_num", nPickedPatternNum);
+      FetchInt(m_vecGoodVMs[i], "picked_pattern", nPickedPattern);
+      FetchFloat(m_vecGoodVMs[i], "picked_pattern_prob", fPickedPatternProb);
+      FetchFloat(m_vecGoodVMs[i], "correct_pattern_prob", fCorrectPatternProb);
+      if (nPickedPatternNum == 1 && nPickedPattern == m_unPattern && fCorrectPatternProb > 0.99)
+        continue;
+      flag = 0;
+   }
+  }
+
+  if(GetSpace().GetSimulationClock() >= m_fExptTime || flag == 1){
+    // ResultFile << GetSpace().GetSimulationClock() << std::endl;
+    // ResultFile << correct_belief_num_robot << std::endl;
+    return true;
+  }
+  // if(correct_belief_num_robot == truthfulRobots){
+  //   ResultFile << GetSpace().GetSimulationClock() << std::endl;
+  //   return true;
+  // }
+  return false;
+}
+
 
 void CPatternLoopFunctions::PostStep() {
    SInt32 nPickedPattern;
@@ -199,6 +224,7 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
       Real fCommArea = CRadians::PI.GetValue() * Square(f_commrange);
       /* Calculate side of the region in which the robots are scattered */
       m_fArenaSide = Sqrt((fCommArea * un_robots) / f_density);
+      m_fExptTime = 600*m_fArenaSide;
       CRange<Real> cAreaRange(0.0, m_fArenaSide);
       /* Place walls */
       Real fArenaSide2 = m_fArenaSide / 2.0;
@@ -260,12 +286,19 @@ void CPatternLoopFunctions::PlaceRobots(UInt32 un_robots,
          /* Set number of liars */
          RegisterInt(tBuzzVM, "num_liars", un_liars);
          /* Set number of patterns */
+         // RegisterInt(tBuzzVM, "num_patterns", 30);
          RegisterInt(tBuzzVM, "num_patterns", 1 << (m_unNumCellsOnSide * m_unNumCellsOnSide));
          /* Set correct pattern */
          RegisterInt(tBuzzVM, "pattern", m_unPattern);
+         /* Set wrong pattern */
+         RegisterInt(tBuzzVM, "wrong_pattern", m_unWrongPattern);
+         /* Set frequency of change of wrong pattern */
+         RegisterInt(tBuzzVM, "wrong_frequency", m_unWrongFrequency);
          /* Set scripts */
          /* Set arena_side */
          RegisterFloat(tBuzzVM, "arena_side", m_fArenaSide);
+         /* Set total experiment time */
+         RegisterFloat(tBuzzVM, "experiment_time", m_fExptTime);
          /* Set cells_on_side */
          RegisterInt(tBuzzVM, "cells_on_side", m_unNumCellsOnSide);
          /* Good/bad robots functions */

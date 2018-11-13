@@ -67,7 +67,9 @@
          23130 -> checkerboard with black in (0,0)
     -->
     <patterns cells_on_side="SIDE"
-              pattern="PATTERN" />
+              pattern="PATTERN"
+              wrong_pattern="WRONG_PATTERN"
+              wrong_frequency="WRONG_FREQUENCY" />
     <robots num_robots="NUM_ROBOTS"
             num_liars="NUM_LIARS"
             comm_range="COMM_RANGE"
